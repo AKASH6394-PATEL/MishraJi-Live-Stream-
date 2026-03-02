@@ -1,4 +1,4 @@
-name: 24/7 Kashi Photo Stream
+name: 24/7 Kashi Video Stream
 
 on:
   push:
@@ -18,39 +18,37 @@ jobs:
       run: |
         sudo apt-get update && sudo apt-get install -y ffmpeg wget
 
-    - name: Prepare Audio
+    - name: Download Audio Assets
       run: |
-        # Audio files download kar rahe hain (Check karein ki ye links kaam kar rahe hain)
-        wget -O morning.mp3 https://github.com/${{ github.repository }}/releases/download/v1/morning_audio.mp3 || echo "Morning audio missing"
-        wget -O afternoon.mp3 https://github.com/${{ github.repository }}/releases/download/v1/afternoon_audio.mp3 || echo "Afternoon audio missing"
-        wget -O evening.mp3 https://github.com/${{ github.repository }}/releases/download/v1/evening_aarti_audio.mp3 || echo "Evening audio missing"
-        wget -O night.mp3 https://github.com/${{ github.repository }}/releases/download/v1/night_audio.mp3 || echo "Night audio missing"
+        # Download files with consistent names
+        wget -O morning.mp3 https://github.com/${{ github.repository }}/releases/download/v1/morning_audio.mp3 || echo "File not found"
+        wget -O afternoon.mp3 https://github.com/${{ github.repository }}/releases/download/v1/afternoon_audio.mp3 || echo "File not found"
+        wget -O evening.mp3 https://github.com/${{ github.repository }}/releases/download/v1/evening_aarti_audio.mp3 || echo "File not found"
+        wget -O night.mp3 https://github.com/${{ github.repository }}/releases/download/v1/night_audio.mp3 || echo "File not found"
 
-    - name: Run Photo Stream
+    - name: Run Video Stream
       run: |
-        # Timezone Calculation (IST)
+        # IST Time Calculate
         H=$(date -u -d "+5 hours 30 minutes" +%H)
         echo "Current IST Hour: $H"
 
-        if [ $H -ge 03 ] && [ $H -lt 10 ]; then
-          A="morning.mp3"
-        elif [ $H -ge 10 ] && [ $H -lt 18 ]; then
-          A="afternoon.mp3"
-        elif [ $H -ge 18 ] && [ $H -lt 21 ]; then
-          A="evening.mp3"
+        # Logic based on your HTML time slots
+        if [ $H -ge 05 ] && [ $H -lt 12 ]; then
+          V="morning.video.mp4"; A="morning.mp3"
+        elif [ $H -ge 12 ] && [ $H -lt 17 ]; then
+          V="morning.video.mp4"; A="afternoon.mp3"
+        elif [ $H -ge 17 ] && [ $H -lt 20 ]; then
+          V="ganga_aarti_video.mp4"; A="evening.mp3"
         else
-          A="night.mp3"
+          V="ganga_aarti_video.mp4"; A="night.mp3"
         fi
 
-        # Check if thumbnail exists
-        if [ ! -f "thumbnail.jpg" ]; then
-          echo "ERROR: thumbnail.jpg not found in repository root!"
-          exit 1
-        fi
-
-        # Stream Command with Auto-Loop and 6-hour limit
-        ffmpeg -re -loop 1 -i thumbnail.jpg -stream_loop -1 -i "$A" \
-        -c:v libx264 -preset superfast -tune stillimage -b:v 1500k \
-        -maxrate 1500k -bufsize 3000k -pix_fmt yuv420p -g 60 \
-        -c:a aac -b:a 128k -ar 44100 \
+        # FFmpeg Command for Video + Audio
+        # -stream_loop -1: Video/Audio repeat karne ke liye
+        # -t 21500: GitHub Action limit (approx 6 hours)
+        
+        ffmpeg -re -stream_loop -1 -i "$V" -stream_loop -1 -i "$A" \
+        -map 0:v:0 -map 1:a:0 \
+        -c:v libx264 -preset superfast -b:v 2500k -maxrate 2500k -bufsize 5000k \
+        -pix_fmt yuv420p -g 60 -c:a aac -b:a 128k -ar 44100 \
         -t 21500 -f flv "rtmp://a.rtmp.youtube.com/live2/${{ secrets.YOUTUBE_STREAM_KEY }}"
