@@ -19,15 +19,17 @@ jobs:
 
       - name: Download Audio Files
         run: |
-          echo "Downloading audio files..."
+          echo "Downloading audio files from releases..."
           wget -q -O morning_audio.mp3 https://github.com/${{ github.repository }}/releases/download/v1/morning_audio.mp3
           wget -q -O afternoon_audio.mp3 https://github.com/${{ github.repository }}/releases/download/v1/afternoon_audio.mp3
           wget -q -O evening_aarti_audio.mp3 https://github.com/${{ github.repository }}/releases/download/v1/evening_aarti_audio.mp3
-          wget -q -O night_audio.mp3 https://github.com/${{ github.repository }}/releases/download/v1/night_audio.mp3
+          # Night audio with dot (.) as confirmed by you
+          wget -q -O night.audio.mp3 https://github.com/${{ github.repository }}/releases/download/v1/night_audio.mp3
           echo "Audio download completed."
 
       - name: Determine Time Slot (IST)
         run: |
+          # IST Time Calculation
           H=$(date -u -d "+5 hours 30 minutes" +%H)
           echo "Current IST Hour: $H"
 
@@ -45,19 +47,29 @@ jobs:
             echo "MSG=Ganga Aarti | Evening Grace" >> $GITHUB_ENV
           else
             echo "VIDEO=ganga_aarti_video.mp4" >> $GITHUB_ENV
-            echo "AUDIO=night_audio.mp3" >> $GITHUB_ENV
+            echo "AUDIO=night.audio.mp3" >> $GITHUB_ENV
             echo "MSG=Shubh Ratri | Divine Night" >> $GITHUB_ENV
           fi
 
-      - name: Check Files
+      - name: Check Files Existence
         run: |
-          echo "Selected Stream: Video=$VIDEO, Audio=$AUDIO"
-          if [ ! -f "$VIDEO" ]; then echo "ERROR: $VIDEO missing!"; ls -lh; exit 1; fi
-          if [ ! -f "$AUDIO" ]; then echo "ERROR: $AUDIO missing!"; ls -lh; exit 1; fi
+          echo "Checking if selected files exist..."
+          if [ ! -f "$VIDEO" ]; then
+            echo "ERROR: Video file $VIDEO not found in repo root!"
+            ls -lh
+            exit 1
+          fi
+          if [ ! -f "$AUDIO" ]; then
+            echo "ERROR: Audio file $AUDIO not found!"
+            exit 1
+          fi
+          echo "All files verified. Starting stream..."
 
       - name: Start YouTube Stream
         run: |
           echo "Starting Stream: $MSG"
+          # -re (realtime), -stream_loop -1 (infinite loop for both)
+          # -t 21500 (stops at 5h 58m to allow next cron cycle)
           ffmpeg -re -stream_loop -1 -i "$VIDEO" -stream_loop -1 -i "$AUDIO" \
           -map 0:v:0 -map 1:a:0 \
           -c:v libx264 -preset veryfast -b:v 2500k -maxrate 2500k -bufsize 5000k \
