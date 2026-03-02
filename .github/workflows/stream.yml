@@ -9,7 +9,6 @@ jobs:
 stream:
 runs-on: ubuntu-latest
 
-```
 steps:
   - name: Checkout Repository
     uses: actions/checkout@v3
@@ -21,8 +20,6 @@ steps:
 
   - name: Download Audio Files
     run: |
-      echo "Downloading audio files..."
-
       wget -q -O morning_audio.mp3 https://github.com/${{ github.repository }}/releases/download/v1/morning_audio.mp3
       wget -q -O afternoon_audio.mp3 https://github.com/${{ github.repository }}/releases/download/v1/afternoon_audio.mp3
       wget -q -O evening_aarti_audio.mp3 https://github.com/${{ github.repository }}/releases/download/v1/evening_aarti_audio.mp3
@@ -31,7 +28,6 @@ steps:
   - name: Select Time Slot
     run: |
       H=$(date -u -d "+5 hours 30 minutes" +%H)
-      echo "Current IST Hour: $H"
 
       if [ $H -ge 05 ] && [ $H -lt 12 ]; then
         echo "VIDEO=morning_video.mp4" >> $GITHUB_ENV
@@ -52,24 +48,18 @@ steps:
 
   - name: Check Files
     run: |
-      echo "Video: $VIDEO"
-      echo "Audio: $AUDIO"
-
       if [ ! -f "$VIDEO" ]; then
-        echo "ERROR: Video file not found!"
-        ls -lh
+        echo "Video file missing!"
         exit 1
       fi
 
       if [ ! -f "$AUDIO" ]; then
-        echo "ERROR: Audio file not found!"
+        echo "Audio file missing!"
         exit 1
       fi
 
   - name: Start Stream
     run: |
-      echo "Starting YouTube Stream..."
-
       ffmpeg -re -stream_loop -1 -i "$VIDEO" -stream_loop -1 -i "$AUDIO" \
       -map 0:v:0 -map 1:a:0 \
       -c:v libx264 -preset veryfast \
@@ -77,5 +67,5 @@ steps:
       -pix_fmt yuv420p -g 60 \
       -c:a aac -b:a 128k -ar 44100 \
       -t 21500 \
-      -f flv "rtmp://a.rtmp.youtube.com/live2/${{ secrets.YOUTUBE_STREAM_KEY }}"
+      -f flv rtmp://a.rtmp.youtube.com/live2/${{ secrets.YOUTUBE_STREAM_KEY }}
 ```
