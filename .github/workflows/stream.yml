@@ -6,21 +6,19 @@ on:
 jobs:
   stream:
     runs-on: ubuntu-latest
+    timeout-minutes: 350
 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-
       - name: Install FFmpeg
         run: |
           sudo apt update
           sudo apt install ffmpeg -y
 
-      - name: Start Live Streaming
-        env:
-          STREAM_KEY: ${{ secrets.STREAM_KEY }}
+      - name: Start Stream
         run: |
-          ffmpeg -re -stream_loop -1 -i video.mp4 \
-          -c:v libx264 -preset veryfast -maxrate 3000k -bufsize 6000k \
-          -pix_fmt yuv420p -g 50 -c:a aac -b:a 128k -ar 44100 \
-          -f flv rtmp://a.rtmp.youtube.com/live2/$STREAM_KEY
+          ffmpeg -re -stream_loop -1 \
+          -i "https://drive.google.com/uc?export=download&id=1k_gF6NNEqDFAOTyCjR9gNq5NWUPmIkxu" \
+          -i "https://drive.google.com/uc?export=download&id=1Ie7lS-_SagxR58qcJrwN9MGirkCRq0df" \
+          -c:v copy \
+          -c:a aac -b:a 128k \
+          -f flv rtmp://a.rtmp.youtube.com/live2/YOUR_STREAM_KEY
