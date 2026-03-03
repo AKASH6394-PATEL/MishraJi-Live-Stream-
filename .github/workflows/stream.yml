@@ -1,14 +1,15 @@
-name: Live Stream
+name: 24/7 Spiritual Live Stream
 
 on:
+  schedule:
+    - cron: '0 */4 * * *' # Har 4 ghante mein auto-restart
   workflow_dispatch:
 
 jobs:
   stream:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v3
 
       - name: Install FFmpeg
@@ -16,21 +17,41 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ffmpeg
 
-      - name: Download Video
+      - name: Determine Content Based on IST Time
         run: |
-          wget -O video.mp4 https://github.com/AKASH6394-PATEL/Shiva-Live-Stream/releases/download/v1/shiv-loop-video.mp4
+          # IST (UTC+5:30) nikalne ke liye logic
+          HOUR=$(date -u -d "+5 hours 30 minutes" +"%H")
+          echo "Current Hour in IST: $HOUR"
 
-      - name: Download Audio
+          if [ $HOUR -ge 4 ] && [ $HOUR -lt 8 ]; then
+            # 4 AM - 8 AM: Shiv Bhajan
+            echo "VIDEO_URL=https://github.com/AKASH6394-PATEL/Shiva-Live-Stream/releases/download/v1/shiv-loop-video.mp4" >> $GITHUB_ENV
+            echo "AUDIO_URL=https://github.com/AKASH6394-PATEL/Shiva-Live-Stream/releases/download/v1/shiv-mantra-master-47min.mp3" >> $GITHUB_ENV
+          elif [ $HOUR -ge 8 ] && [ $HOUR -lt 16 ]; then
+            # 8 AM - 4 PM: Radha Radha Naam Jap
+            echo "VIDEO_URL=https://github.com/AKASH6394-PATEL/Shiva-Live-Stream/releases/download/v1/radha-loop-video.mp4" >> $GITHUB_ENV
+            echo "AUDIO_URL=https://github.com/AKASH6394-PATEL/Shiva-Live-Stream/releases/download/v1/radha-radha-chant-27min.mp3" >> $GITHUB_ENV
+          elif [ $HOUR -ge 16 ] && [ $HOUR -lt 20 ]; then
+            # 4 PM - 8 PM: Shiv Mantra Again
+            echo "VIDEO_URL=https://github.com/AKASH6394-PATEL/Shiva-Live-Stream/releases/download/v1/shiv-loop-video.mp4" >> $GITHUB_ENV
+            echo "AUDIO_URL=https://github.com/AKASH6394-PATEL/Shiva-Live-Stream/releases/download/v1/shiv-mantra-master-47min.mp3" >> $GITHUB_ENV
+          else
+            # 8 PM - 4 AM: Hare Krishna
+            echo "VIDEO_URL=https://github.com/AKASH6394-PATEL/Shiva-Live-Stream/releases/download/v1/krishna-loop-video.mp4" >> $GITHUB_ENV
+            echo "AUDIO_URL=https://github.com/AKASH6394-PATEL/Shiva-Live-Stream/releases/download/v1/hare-krishna-mahamantra-31min.mp3" >> $GITHUB_ENV
+          fi
+
+      - name: Download Selected Files
         run: |
-          wget -O audio.mp3 https://github.com/AKASH6394-PATEL/Shiva-Live-Stream/releases/download/v1/shiv-mantra-master-47min.mp3
+          wget -O current_video.mp4 $VIDEO_URL
+          wget -O current_audio.mp3 $AUDIO_URL
 
       - name: Start Live Stream
         run: |
-          ffmpeg -re -stream_loop -1 -i video.mp4 -stream_loop -1 -i audio.mp3 \
+          ffmpeg -re -stream_loop -1 -i current_video.mp4 -stream_loop -1 -i current_audio.mp3 \
           -map 0:v:0 -map 1:a:0 \
           -c:v libx264 -preset veryfast -b:v 2500k \
           -maxrate 2500k -bufsize 5000k \
           -pix_fmt yuv420p -g 50 -r 25 \
           -c:a aac -b:a 128k -ar 44100 \
-          -vf scale=1280:720 \
           -f flv "rtmp://a.rtmp.youtube.com/live2/${{ secrets.YOUTUBE_STREAM_KEY }}"
