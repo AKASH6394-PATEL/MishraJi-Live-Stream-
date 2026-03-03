@@ -17,8 +17,8 @@ jobs:
       - name: Start Stream
         run: |
           ffmpeg -re -stream_loop -1 \
-          -i "https://drive.google.com/uc?export=download&id=1k_gF6NNEqDFAOTyCjR9gNq5NWUPmIkxu" \
-          -i "https://drive.google.com/uc?export=download&id=1Ie7lS-_SagxR58qcJrwN9MGirkCRq0df" \
+          -i "https://github.com/AKASH6394-PATEL/Shiva-Live-Stream/releases/download/v1/shiv-loop-video.mp4" \
+          -i "https://github.com/AKASH6394-PATEL/Shiva-Live-Stream/releases/download/v1/shiv-mantra-master-47min.mp3" \
           -c:v copy \
           -c:a aac -b:a 128k \
           -f flv rtmp://a.rtmp.youtube.com/live2/YOUR_STREAM_KEY
