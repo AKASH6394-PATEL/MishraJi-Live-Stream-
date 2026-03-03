@@ -6,7 +6,6 @@ on:
 jobs:
   stream:
     runs-on: ubuntu-latest
-    timeout-minutes: 350
 
     steps:
       - name: Install FFmpeg
@@ -19,6 +18,7 @@ jobs:
           ffmpeg -re -stream_loop -1 \
           -i "https://github.com/AKASH6394-PATEL/Shiva-Live-Stream/releases/download/v1/shiv-loop-video.mp4" \
           -i "https://github.com/AKASH6394-PATEL/Shiva-Live-Stream/releases/download/v1/shiv-mantra-master-47min.mp3" \
-          -c:v copy \
-          -c:a aac -b:a 128k \
+          -c:v libx264 -preset veryfast -maxrate 3000k -bufsize 6000k -pix_fmt yuv420p \
+          -g 50 \
+          -c:a aac -b:a 128k -ar 44100 \
           -f flv rtmp://a.rtmp.youtube.com/live2/YOUR_STREAM_KEY
