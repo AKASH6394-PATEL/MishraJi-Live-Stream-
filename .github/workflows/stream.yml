@@ -33,4 +33,4 @@ jobs:
           -pix_fmt yuv420p -g 50 -r 25 \
           -c:a aac -b:a 128k -ar 44100 \
           -vf scale=854:480 \
-          -f flv rtmp://a.rtmp.youtube.com/live2/${{ secrets.STREAM_KEY }}
+          rtmp://a.rtmp.youtube.com/live2/${{ secrets.YOUTUBE_STREAM_KEY }}
