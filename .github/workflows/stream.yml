@@ -1,4 +1,4 @@
-name: Live Stream
+name: YouTube 24/7 Stream
 
 on:
   workflow_dispatch:
@@ -9,24 +9,23 @@ jobs:
 
     steps:
 
-    - name: Install FFmpeg
-      run: |
-        sudo apt update
-        sudo apt install ffmpeg -y
+      - name: Install FFmpeg
+        run: |
+          sudo apt update
+          sudo apt install ffmpeg -y
 
-    - name: Download Video
-      run: |
-        wget -O video.mp4 https://github.com/AKASH6394-PATEL/Shiva-Live-Stream/releases/download/v1/shiv-loop-video.mp4
+      - name: Download Video
+        run: |
+          wget -O video.mp4 https://github.com/AKASH6394-PATEL/Shiva-Live-Stream/releases/download/v1/shiv-loop-video.mp4
 
-    - name: Download Audio
-      run: |
-        wget -O audio.mp3 https://github.com/AKASH6394-PATEL/Shiva-Live-Stream/releases/download/v1/shiv-mantra-master-47min.mp3
+      - name: Download Audio
+        run: |
+          wget -O audio.mp3 https://github.com/AKASH6394-PATEL/Shiva-Live-Stream/releases/download/v1/shiv-mantra-master-47min.mp3
 
-    - name: Start Live Stream
-      run: |
-        ffmpeg -re -stream_loop -1 -i video.mp4 -stream_loop -1 -i audio.mp3 \
-        -c:v libx264 -preset veryfast -maxrate 1000k -bufsize 2000k \
-        -pix_fmt yuv420p -g 50 -r 25 \
-        -c:a aac -b:a 128k -ar 44100 \
-        -vf "scale=854:480" \
-        -f flv rtmp://a.rtmp.youtube.com/live2/YOUR_STREAM_KEY
+      - name: Start Live Stream
+        run: |
+          ffmpeg -re -stream_loop -1 -i video.mp4 -stream_loop -1 -i audio.mp3 \
+          -c:v libx264 -preset veryfast -b:v 1000k \
+          -c:a aac -b:a 128k \
+          -vf scale=854:480 \
+          -f flv rtmp://a.rtmp.youtube.com/live2/PASTE_YOUR_STREAM_KEY_HERE 9huv-paeh-m82s-kt24-d2y0
